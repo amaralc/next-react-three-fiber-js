@@ -49,6 +49,7 @@ const MyCube = ({
   headDirection = HEAD_DIRECTION,
   gcode = GCODE
 }) => {
+  /** Control row state */
   const [gcodeRow, setGcodeRow] = useState(0)
 
   const mesh = useRef()
@@ -67,7 +68,14 @@ const MyCube = ({
 
   useFrame(() => {
     if (i === j) {
-      console.log({ position: mesh.current.position, target: targetVector })
+      console.log({
+        position: {
+          x: mesh.current.position.x,
+          y: mesh.current.position.y,
+          z: mesh.current.position.z
+        },
+        target: targetVector
+      })
       i += 1
     }
     /** Set target */
