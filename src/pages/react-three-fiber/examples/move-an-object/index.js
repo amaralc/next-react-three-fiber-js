@@ -30,61 +30,78 @@ const GCODE = [
     speed: 0.02
   },
   {
-    targetCoordinates: [0, 5, 1],
+    targetCoordinates: [2, 5, 1],
+    speed: 0.01
+  },
+  {
+    targetCoordinates: [3, 2, 3],
+    speed: 0.01
+  },
+  {
+    targetCoordinates: [0, 0, 0],
     speed: 0.01
   }
 ]
 
 const MyCube = ({
   originCoords = ORIGIN_COORDS,
-  targetCoords = TARGET_COORDS,
   headDirection = HEAD_DIRECTION,
-  speed = SPEED,
   gcode = GCODE
 }) => {
-  const [targetCoordinates, setTargetCoordinates] = useState(
-    gcode[0].targetCoordinates
-  )
-  const [currentSpeed, setCurrentSpeed] = useState(speed)
+  const [gcodeRow, setGcodeRow] = useState(0)
 
   const mesh = useRef()
   const direction = new THREE.Vector3()
   const distanceVector = new THREE.Vector3()
   const refPosition = new THREE.Vector3()
-  const targetVector = new THREE.Vector3(...targetCoordinates)
+  const targetVector = new THREE.Vector3()
   const headDirectionVector = new THREE.Vector3(...headDirection)
+  let i = 0
 
   useEffect(() => {
     /** Set orientation of cube */
     mesh.current.lookAt(headDirectionVector)
-  }, [headDirectionVector])
+    console.log(mesh.current.position)
+  }, [])
 
   useFrame(() => {
-    gcode.forEach(item => {
-      const { position } = mesh.current
-      /** Copy current position to variable */
-      refPosition.copy(position)
+    /** Set target */
+    targetVector.set(
+      gcode[gcodeRow].targetCoordinates[0],
+      gcode[gcodeRow].targetCoordinates[1],
+      gcode[gcodeRow].targetCoordinates[2]
+    )
 
-      /** Calculates distance to target point */
-      distanceVector.addVectors(targetVector, refPosition.multiplyScalar(-1))
+    const { position } = mesh.current
+    /** Copy current position to variable */
+    refPosition.copy(position)
 
-      /** If distance greater than zero */
-      if (distanceVector.length() > 0) {
-        /** Calculate unit vector */
-        direction.subVectors(targetVector, position).normalize()
+    /** Calculates distance to target point */
+    distanceVector.addVectors(targetVector, refPosition.multiplyScalar(-1))
 
-        /** Multiply unit vector by speed */
-        const vector = direction.multiplyScalar(currentSpeed)
+    /** If distance greater than zero */
+    if (distanceVector.length() > 0) {
+      /** Calculate unit vector */
+      direction.subVectors(targetVector, position).normalize()
 
-        /** Update position */
-        mesh.current.position.x += Math.min(vector.x, distanceVector.x)
-        mesh.current.position.y += Math.min(vector.y, distanceVector.y)
-        mesh.current.position.z += Math.min(vector.z, distanceVector.z)
-      } else {
-        setTargetCoordinates(item.targetCoordinates)
-        setCurrentSpeed(item.speed)
+      /** Multiply unit vector by speed */
+      const vector = direction.multiplyScalar(gcode[gcodeRow].speed)
+      const a = gcodeRow
+      if (a !== i) {
+        console.log({ vector })
+        i = a
       }
-    })
+
+      /** Update position */
+      mesh.current.position.x += Math.min(vector.x, distanceVector.x)
+      mesh.current.position.y += Math.min(vector.y, distanceVector.y)
+      mesh.current.position.z += Math.min(vector.z, distanceVector.z)
+    } else {
+      console.log(mesh.current.position)
+      if (gcodeRow < gcode.length - 1) {
+        setGcodeRow(gcodeRow + 1)
+      }
+    }
   })
 
   return (
