@@ -21,9 +21,6 @@ import { Container } from './styles'
 extend({ OrbitControls })
 const HEAD_DIRECTION = [0, 0, 1]
 const ORIGIN_COORDS = [0, 0, 0]
-const TARGET_COORDS = [0, 3, 1]
-const SPEED = 0.02
-
 const GCODE = [
   {
     targetCoordinates: [0, 3, 1],
@@ -35,11 +32,11 @@ const GCODE = [
   },
   {
     targetCoordinates: [3, 2, 3],
-    speed: 0.01
+    speed: 0.05
   },
   {
     targetCoordinates: [0, 0, 0],
-    speed: 0.01
+    speed: 0.07
   }
 ]
 
@@ -57,14 +54,18 @@ const MyCube = ({
   const targetVector = new THREE.Vector3()
   const headDirectionVector = new THREE.Vector3(...headDirection)
   let i = 0
+  const j = 0
 
   useEffect(() => {
     /** Set orientation of cube */
     mesh.current.lookAt(headDirectionVector)
-    console.log(mesh.current.position)
   }, [])
 
   useFrame(() => {
+    if (i === j) {
+      console.log({ position: mesh.current.position, target: targetVector })
+      i += 1
+    }
     /** Set target */
     targetVector.set(
       gcode[gcodeRow].targetCoordinates[0],
@@ -85,20 +86,21 @@ const MyCube = ({
       direction.subVectors(targetVector, position).normalize()
 
       /** Multiply unit vector by speed */
-      const vector = direction.multiplyScalar(gcode[gcodeRow].speed)
-      const a = gcodeRow
-      if (a !== i) {
-        console.log({ vector })
-        i = a
-      }
+      const speedVector = direction.multiplyScalar(gcode[gcodeRow].speed)
 
       /** Update position */
-      mesh.current.position.x += Math.min(vector.x, distanceVector.x)
-      mesh.current.position.y += Math.min(vector.y, distanceVector.y)
-      mesh.current.position.z += Math.min(vector.z, distanceVector.z)
+      if (speedVector.length() < distanceVector.length()) {
+        mesh.current.position.x += speedVector.x
+        mesh.current.position.y += speedVector.y
+        mesh.current.position.z += speedVector.z
+      } else {
+        mesh.current.position.x += distanceVector.x
+        mesh.current.position.y += distanceVector.y
+        mesh.current.position.z += distanceVector.z
+      }
     } else {
-      console.log(mesh.current.position)
       if (gcodeRow < gcode.length - 1) {
+        i = j
         setGcodeRow(gcodeRow + 1)
       }
     }
