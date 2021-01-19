@@ -12,7 +12,7 @@
  * https://codesandbox.io/s/41zwr?file=/src/index.js
  */
 
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Canvas, useFrame, extend, useThree } from 'react-three-fiber'
 import * as THREE from 'three'
 import OrbitControls from 'three-orbitcontrols'
@@ -24,31 +24,67 @@ const ORIGIN_COORDS = [0, 0, 0]
 const TARGET_COORDS = [0, 3, 1]
 const SPEED = 0.02
 
+const GCODE = [
+  {
+    targetCoordinates: [0, 3, 1],
+    speed: 0.02
+  },
+  {
+    targetCoordinates: [0, 5, 1],
+    speed: 0.01
+  }
+]
+
 const MyCube = ({
   originCoords = ORIGIN_COORDS,
   targetCoords = TARGET_COORDS,
   headDirection = HEAD_DIRECTION,
-  speed = SPEED
+  speed = SPEED,
+  gcode = GCODE
 }) => {
+  const [targetCoordinates, setTargetCoordinates] = useState(
+    gcode[0].targetCoordinates
+  )
+  const [currentSpeed, setCurrentSpeed] = useState(speed)
+
   const mesh = useRef()
   const direction = new THREE.Vector3()
-  const targetVector = new THREE.Vector3(...targetCoords)
+  const distanceVector = new THREE.Vector3()
+  const refPosition = new THREE.Vector3()
+  const targetVector = new THREE.Vector3(...targetCoordinates)
   const headDirectionVector = new THREE.Vector3(...headDirection)
 
-  useEffect(() => mesh.current.lookAt(headDirectionVector), [
-    headDirectionVector
-  ])
+  useEffect(() => {
+    /** Set orientation of cube */
+    mesh.current.lookAt(headDirectionVector)
+  }, [headDirectionVector])
 
   useFrame(() => {
-    const { position } = mesh.current
-    if (position !== targetVector) {
-      direction.subVectors(targetVector, position).normalize()
-      const vector = direction.multiplyScalar(speed)
+    gcode.forEach(item => {
+      const { position } = mesh.current
+      /** Copy current position to variable */
+      refPosition.copy(position)
 
-      mesh.current.position.x += vector.x
-      mesh.current.position.y += vector.y
-      mesh.current.position.z += vector.z
-    }
+      /** Calculates distance to target point */
+      distanceVector.addVectors(targetVector, refPosition.multiplyScalar(-1))
+
+      /** If distance greater than zero */
+      if (distanceVector.length() > 0) {
+        /** Calculate unit vector */
+        direction.subVectors(targetVector, position).normalize()
+
+        /** Multiply unit vector by speed */
+        const vector = direction.multiplyScalar(currentSpeed)
+
+        /** Update position */
+        mesh.current.position.x += Math.min(vector.x, distanceVector.x)
+        mesh.current.position.y += Math.min(vector.y, distanceVector.y)
+        mesh.current.position.z += Math.min(vector.z, distanceVector.z)
+      } else {
+        setTargetCoordinates(item.targetCoordinates)
+        setCurrentSpeed(item.speed)
+      }
+    })
   })
 
   return (
