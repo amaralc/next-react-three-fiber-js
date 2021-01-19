@@ -19,28 +19,52 @@ import OrbitControls from 'three-orbitcontrols'
 import { Container } from './styles'
 
 extend({ OrbitControls })
-const HEAD_DIRECTION = [0, 0, 1]
-const ORIGIN_COORDS = [0, 0, 0]
+const HEAD_DIRECTION = [0, 5, 0]
+const ORIGIN_COORDS = [0, 5, 0]
+
+/** Generate code randomly */
+// const code = []
+
+// let thisTargetCoordinates
+// let thisX
+// let thisY
+// let thisZ
+// let thisS
+
+// for (let i = 0; i < 100; i++) {
+//   thisX = Math.floor(Math.random() * 150) + 1
+//   thisY = 5
+//   thisZ = Math.floor(Math.random() * 150) + 1
+//   thisS = Math.floor(Math.random() * 10) + 1
+//   thisTargetCoordinates = [thisX, thisY, thisZ]
+//   code.push({
+//     targetCoordinates: thisTargetCoordinates,
+//     speed: thisS
+//   })
+// }
+
+// const GCODE = code
+
 const GCODE = [
   {
-    targetCoordinates: [0, 3, 1],
-    speed: 0.02
+    targetCoordinates: [100, 5, 0],
+    speed: 0.2
   },
   {
-    targetCoordinates: [2, 5, 1],
-    speed: 0.01
+    targetCoordinates: [75, 10, 100],
+    speed: 0.1
   },
   {
-    targetCoordinates: [3, 2, 3],
-    speed: 0.05
+    targetCoordinates: [50, 5, 100],
+    speed: 0.5
   },
   {
-    targetCoordinates: [0, 0, 0],
-    speed: 0.07
+    targetCoordinates: [173, 5, 20],
+    speed: 0.7
   },
   {
-    targetCoordinates: [1, 3, 5],
-    speed: 0.07
+    targetCoordinates: [0, 5, 0],
+    speed: 0.7
   }
 ]
 
@@ -49,6 +73,7 @@ const MyCube = ({
   headDirection = HEAD_DIRECTION,
   gcode = GCODE
 }) => {
+  /** Control row state */
   const [gcodeRow, setGcodeRow] = useState(0)
 
   const mesh = useRef()
@@ -67,7 +92,14 @@ const MyCube = ({
 
   useFrame(() => {
     if (i === j) {
-      console.log({ position: mesh.current.position, target: targetVector })
+      console.log({
+        position: {
+          x: mesh.current.position.x,
+          y: mesh.current.position.y,
+          z: mesh.current.position.z
+        },
+        target: targetVector
+      })
       i += 1
     }
     /** Set target */
@@ -112,7 +144,7 @@ const MyCube = ({
 
   return (
     <mesh position={originCoords} ref={mesh}>
-      <boxBufferGeometry args={[1, 1, 1]} />
+      <boxBufferGeometry args={[10, 10, 10]} />
       <meshNormalMaterial />
     </mesh>
   )
@@ -127,7 +159,7 @@ const Scene = () => {
   return (
     <>
       <orbitControls args={[camera, domElement]} />
-      <gridHelper args={[10, 10, 'white', 'gray']} />
+      <gridHelper args={[300, 300, 'white', 'gray']} />
       <axesHelper />
       <MyCube />
     </>
@@ -140,7 +172,7 @@ const MyCanvas = () => {
       <Canvas
         pixelRatio={1}
         camera={{
-          position: [10, 10, 10]
+          position: [100, 100, 100]
         }}
       >
         <Scene />
