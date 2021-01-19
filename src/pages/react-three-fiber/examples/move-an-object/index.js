@@ -12,7 +12,7 @@
  * https://codesandbox.io/s/41zwr?file=/src/index.js
  */
 
-import React, { useRef, useEffect } from 'react'
+import React, { useRef, useEffect, useState } from 'react'
 import { Canvas, useFrame, extend, useThree } from 'react-three-fiber'
 import * as THREE from 'three'
 import OrbitControls from 'three-orbitcontrols'
@@ -21,33 +21,92 @@ import { Container } from './styles'
 extend({ OrbitControls })
 const HEAD_DIRECTION = [0, 0, 1]
 const ORIGIN_COORDS = [0, 0, 0]
-const TARGET_COORDS = [0, 3, 1]
-const SPEED = 0.02
+const GCODE = [
+  {
+    targetCoordinates: [0, 3, 1],
+    speed: 0.02
+  },
+  {
+    targetCoordinates: [2, 5, 1],
+    speed: 0.01
+  },
+  {
+    targetCoordinates: [3, 2, 3],
+    speed: 0.05
+  },
+  {
+    targetCoordinates: [0, 0, 0],
+    speed: 0.07
+  },
+  {
+    targetCoordinates: [1, 3, 5],
+    speed: 0.07
+  }
+]
 
 const MyCube = ({
   originCoords = ORIGIN_COORDS,
-  targetCoords = TARGET_COORDS,
   headDirection = HEAD_DIRECTION,
-  speed = SPEED
+  gcode = GCODE
 }) => {
+  const [gcodeRow, setGcodeRow] = useState(0)
+
   const mesh = useRef()
   const direction = new THREE.Vector3()
-  const targetVector = new THREE.Vector3(...targetCoords)
+  const distanceVector = new THREE.Vector3()
+  const refPosition = new THREE.Vector3()
+  const targetVector = new THREE.Vector3()
   const headDirectionVector = new THREE.Vector3(...headDirection)
+  let i = 0
+  const j = 0
 
-  useEffect(() => mesh.current.lookAt(headDirectionVector), [
-    headDirectionVector
-  ])
+  useEffect(() => {
+    /** Set orientation of cube */
+    mesh.current.lookAt(headDirectionVector)
+  }, [])
 
   useFrame(() => {
-    const { position } = mesh.current
-    if (position !== targetVector) {
-      direction.subVectors(targetVector, position).normalize()
-      const vector = direction.multiplyScalar(speed)
+    if (i === j) {
+      console.log({ position: mesh.current.position, target: targetVector })
+      i += 1
+    }
+    /** Set target */
+    targetVector.set(
+      gcode[gcodeRow].targetCoordinates[0],
+      gcode[gcodeRow].targetCoordinates[1],
+      gcode[gcodeRow].targetCoordinates[2]
+    )
 
-      mesh.current.position.x += vector.x
-      mesh.current.position.y += vector.y
-      mesh.current.position.z += vector.z
+    const { position } = mesh.current
+    /** Copy current position to variable */
+    refPosition.copy(position)
+
+    /** Calculates distance to target point */
+    distanceVector.addVectors(targetVector, refPosition.multiplyScalar(-1))
+
+    /** If distance greater than zero */
+    if (distanceVector.length() > 0) {
+      /** Calculate unit vector */
+      direction.subVectors(targetVector, position).normalize()
+
+      /** Multiply unit vector by speed */
+      const speedVector = direction.multiplyScalar(gcode[gcodeRow].speed)
+
+      /** Update position */
+      if (speedVector.length() < distanceVector.length()) {
+        mesh.current.position.x += speedVector.x
+        mesh.current.position.y += speedVector.y
+        mesh.current.position.z += speedVector.z
+      } else {
+        mesh.current.position.x += distanceVector.x
+        mesh.current.position.y += distanceVector.y
+        mesh.current.position.z += distanceVector.z
+      }
+    } else {
+      if (gcodeRow < gcode.length - 1) {
+        i = j
+        setGcodeRow(gcodeRow + 1)
+      }
     }
   })
 
