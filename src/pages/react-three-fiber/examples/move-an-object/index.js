@@ -16,7 +16,7 @@ import React, { useRef, useEffect, useState } from 'react'
 import { Canvas, useFrame, extend, useThree } from 'react-three-fiber'
 import * as THREE from 'three'
 import OrbitControls from 'three-orbitcontrols'
-import { Container } from './styles'
+import { Container } from '../../../../styles/pages/react-three-fiber/examples/move-an-object/styles'
 
 extend({ OrbitControls })
 const HEAD_DIRECTION = [0, 5, 0]
