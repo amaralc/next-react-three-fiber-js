@@ -37,6 +37,10 @@ const GCODE = [
   {
     targetCoordinates: [0, 0, 0],
     speed: 0.07
+  },
+  {
+    targetCoordinates: [1, 3, 5],
+    speed: 0.07
   }
 ]
 
