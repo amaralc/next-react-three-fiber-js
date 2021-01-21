@@ -173,12 +173,12 @@ const MyCube = ({
   return (
     <>
       <mesh position={originCoords} ref={mesh}>
-        <boxBufferGeometry args={[10, 10, 10]} />
+        <boxBufferGeometry args={[5, 5, 5]} />
         <meshNormalMaterial />
       </mesh>
       <line ref={line}>
         <geometry />
-        <lineBasicMaterial color="white" />
+        <lineBasicMaterial color="red" linewidth={2} />
       </line>
     </>
   )
