@@ -78,13 +78,13 @@ const MyCube = ({
   /** Control row state */
   const [gcodeRow, setGcodeRow] = useState(0)
   const [myVertices, setMyVertices] = useState([
-    // [0, 5, 0],
-    // [100, 5, 0],
-    // [75, 5, 100]
+    [0, 5, 0],
+    [100, 5, 0],
+    [75, 5, 100]
   ])
 
   const mesh = useRef()
-  const line = useRef()
+  const geometry = useRef()
 
   const direction = new THREE.Vector3()
   const distanceVector = new THREE.Vector3()
@@ -106,13 +106,12 @@ const MyCube = ({
         mesh.current.position.y,
         mesh.current.position.z
       ])
-
-      line.current.geometry.vertices = myVertices.map(
-        v => new THREE.Vector3(...v)
-      )
       setMyVertices(newVertices)
-      console.log(line.current.geometry.vertices)
-      update(line.current)
+      update(geometry.current)
+
+      geometry.current.vertices = myVertices.map(v => new THREE.Vector3(...v))
+
+      console.log(geometry.current.vertices)
 
       console.log({
         position: {
@@ -164,10 +163,13 @@ const MyCube = ({
     }
   })
 
-  const update = useCallback(self => {
-    self.geometry.verticesNeedUpdate = true
-    self.geometry.computeBoundingSphere()
-  }, [])
+  const update = useCallback(
+    self => {
+      self.verticesNeedUpdate = true
+      self.computeBoundingSphere()
+    },
+    [myVertices]
+  )
 
   const thisVertices = useMemo(() => {
     console.log({ myVertices })
@@ -180,8 +182,8 @@ const MyCube = ({
         <boxBufferGeometry args={[10, 10, 10]} />
         <meshNormalMaterial />
       </mesh>
-      <line ref={line}>
-        <geometry />
+      <line>
+        <geometry ref={geometry} />
         <lineBasicMaterial color="white" />
       </line>
     </>
