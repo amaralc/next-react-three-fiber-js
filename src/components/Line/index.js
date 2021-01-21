@@ -14,7 +14,7 @@ function Line({ defaultStart, defaultEnd, defaultMiddle }) {
   const [end, setEnd] = useState(defaultEnd)
   const [middle, setMiddle] = useState(defaultMiddle)
   const vertices = useMemo(
-    () => [start, end, middle].map(v => new THREE.Vector3(...v)),
+    () => [start, end].map(v => new THREE.Vector3(...v)),
     [start, end]
   )
   const update = useCallback(self => {

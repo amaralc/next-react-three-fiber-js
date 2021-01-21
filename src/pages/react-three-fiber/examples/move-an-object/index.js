@@ -12,6 +12,7 @@
  * https://codesandbox.io/s/41zwr?file=/src/index.js
  */
 
+import Line from '@components/Line'
 import React, { useRef, useEffect, useState } from 'react'
 import { Canvas, useFrame, extend, useThree } from 'react-three-fiber'
 import * as THREE from 'three'
@@ -162,6 +163,7 @@ const Scene = () => {
       <gridHelper args={[300, 300, 'white', 'gray']} />
       <axesHelper />
       <MyCube />
+      <Line defaultStart={[-100, -100, 0]} defaultEnd={[0, 100, 0]} />
     </>
   )
 }
