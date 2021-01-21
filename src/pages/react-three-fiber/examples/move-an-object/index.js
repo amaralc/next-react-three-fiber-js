@@ -13,7 +13,7 @@
  */
 
 import Line from '@components/Line'
-import React, { useRef, useEffect, useState } from 'react'
+import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { Canvas, useFrame, extend, useThree } from 'react-three-fiber'
 import * as THREE from 'three'
 import OrbitControls from 'three-orbitcontrols'
@@ -52,7 +52,7 @@ const GCODE = [
     speed: 0.2
   },
   {
-    targetCoordinates: [75, 10, 100],
+    targetCoordinates: [75, 5, 100],
     speed: 0.1
   },
   {
@@ -68,6 +68,7 @@ const GCODE = [
     speed: 0.7
   }
 ]
+const newVertices = []
 
 const MyCube = ({
   originCoords = ORIGIN_COORDS,
@@ -76,8 +77,15 @@ const MyCube = ({
 }) => {
   /** Control row state */
   const [gcodeRow, setGcodeRow] = useState(0)
+  const [myVertices, setMyVertices] = useState([
+    // [0, 5, 0],
+    // [100, 5, 0],
+    // [75, 5, 100]
+  ])
 
   const mesh = useRef()
+  const line = useRef()
+
   const direction = new THREE.Vector3()
   const distanceVector = new THREE.Vector3()
   const refPosition = new THREE.Vector3()
@@ -89,10 +97,23 @@ const MyCube = ({
   useEffect(() => {
     /** Set orientation of cube */
     mesh.current.lookAt(headDirectionVector)
-  }, [])
+  }, [myVertices])
 
   useFrame(() => {
     if (i === j) {
+      newVertices.push([
+        mesh.current.position.x,
+        mesh.current.position.y,
+        mesh.current.position.z
+      ])
+
+      line.current.geometry.vertices = myVertices.map(
+        v => new THREE.Vector3(...v)
+      )
+      setMyVertices(newVertices)
+      console.log(line.current.geometry.vertices)
+      update(line.current)
+
       console.log({
         position: {
           x: mesh.current.position.x,
@@ -143,11 +164,27 @@ const MyCube = ({
     }
   })
 
+  const update = useCallback(self => {
+    self.geometry.verticesNeedUpdate = true
+    self.geometry.computeBoundingSphere()
+  }, [])
+
+  const thisVertices = useMemo(() => {
+    console.log({ myVertices })
+    return myVertices.map(v => new THREE.Vector3(...v))
+  }, [myVertices])
+
   return (
-    <mesh position={originCoords} ref={mesh}>
-      <boxBufferGeometry args={[10, 10, 10]} />
-      <meshNormalMaterial />
-    </mesh>
+    <>
+      <mesh position={originCoords} ref={mesh}>
+        <boxBufferGeometry args={[10, 10, 10]} />
+        <meshNormalMaterial />
+      </mesh>
+      <line ref={line}>
+        <geometry />
+        <lineBasicMaterial color="white" />
+      </line>
+    </>
   )
 }
 
@@ -163,7 +200,6 @@ const Scene = () => {
       <gridHelper args={[300, 300, 'white', 'gray']} />
       <axesHelper />
       <MyCube />
-      <Line defaultStart={[-100, -100, 0]} defaultEnd={[0, 100, 0]} />
     </>
   )
 }
