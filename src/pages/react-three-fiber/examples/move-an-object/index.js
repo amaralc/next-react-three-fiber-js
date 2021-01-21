@@ -12,7 +12,6 @@
  * https://codesandbox.io/s/41zwr?file=/src/index.js
  */
 
-import Line from '@components/Line'
 import React, { useRef, useEffect, useState, useCallback, useMemo } from 'react'
 import { Canvas, useFrame, extend, useThree } from 'react-three-fiber'
 import * as THREE from 'three'
@@ -49,11 +48,11 @@ const ORIGIN_COORDS = [0, 5, 0]
 const GCODE = [
   {
     targetCoordinates: [100, 5, 0],
-    speed: 0.2
+    speed: 1
   },
   {
     targetCoordinates: [75, 5, 100],
-    speed: 0.1
+    speed: 1
   },
   {
     targetCoordinates: [50, 5, 100],
@@ -64,27 +63,25 @@ const GCODE = [
     speed: 0.7
   },
   {
-    targetCoordinates: [0, 5, 0],
+    targetCoordinates: [100, 5, 100],
     speed: 0.7
   }
 ]
-const newVertices = []
+
+const VERTICES = GCODE.map(row => row.targetCoordinates)
 
 const MyCube = ({
   originCoords = ORIGIN_COORDS,
   headDirection = HEAD_DIRECTION,
-  gcode = GCODE
+  gcode = GCODE,
+  vertices = VERTICES
 }) => {
   /** Control row state */
   const [gcodeRow, setGcodeRow] = useState(0)
-  const [myVertices, setMyVertices] = useState([
-    [0, 5, 0],
-    [100, 5, 0],
-    [75, 5, 100]
-  ])
+  const [myVertices, setMyVertices] = useState([originCoords, ...vertices])
 
   const mesh = useRef()
-  const geometry = useRef()
+  const line = useRef()
 
   const direction = new THREE.Vector3()
   const distanceVector = new THREE.Vector3()
@@ -101,17 +98,14 @@ const MyCube = ({
 
   useFrame(() => {
     if (i === j) {
-      newVertices.push([
-        mesh.current.position.x,
-        mesh.current.position.y,
-        mesh.current.position.z
-      ])
-      setMyVertices(newVertices)
-      update(geometry.current)
+      // setMyVertices(newVertices)
 
-      geometry.current.vertices = myVertices.map(v => new THREE.Vector3(...v))
+      line.current.geometry.vertices = myVertices.map(
+        v => new THREE.Vector3(...v)
+      )
 
-      console.log(geometry.current.vertices)
+      console.log(line.current.geometry.vertices)
+      update(line.current.geometry)
 
       console.log({
         position: {
@@ -182,8 +176,8 @@ const MyCube = ({
         <boxBufferGeometry args={[10, 10, 10]} />
         <meshNormalMaterial />
       </mesh>
-      <line>
-        <geometry ref={geometry} />
+      <line ref={line}>
+        <geometry />
         <lineBasicMaterial color="white" />
       </line>
     </>
